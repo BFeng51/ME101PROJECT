@@ -2,6 +2,6 @@
 task main()
 {
 
-
+motor[motor1] = motor[motor1]= 0;
 
 }
