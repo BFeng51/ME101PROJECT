@@ -4,7 +4,7 @@
 void driveRobot(int dist, int speed)
 {
 	motor[motorA]=speed;
-	while(sensorValue[S3]>dist)
+	while(SensorValue[S3]>dist)
 	{}
 	motor[motorA]=0;
 
