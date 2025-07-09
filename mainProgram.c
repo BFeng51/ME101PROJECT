@@ -11,8 +11,6 @@ void driveRobot(int dist, int speed)
 	{}
 	motor[motorA]=0;
 
-
-
 }
 
 //reset robot to origin (will need to be used in simutaneously with driveRobot)
@@ -39,6 +37,9 @@ void readBillValue(billColor)
 
 //convert color integer to dist in cm
 double getDist()
+{
+
+}
 
 //hard stop and reset
 void stopEverything()
