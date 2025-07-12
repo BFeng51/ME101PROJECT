@@ -1,24 +1,38 @@
+//SENSOR INPUTS ARE WRITTEN ASSUMING STANDARD CONFIGURATION (SUBJECT TO CHANGE)
+//S4 WILL BE SHUTDOWN BUTTON (TOUCH SENSOR)
 //GLOBAL VARIABLES HERE:
-//test 2gflWUGFLwuf
-int billColour = 0;
 
+
+//hard stop and reset
+void stopEverything()
+{
+	motor[motorA]=-100;
+	while(SensorValue[S1]!=1)
+	{}
+	motor[motorA]=0;
+}
 //HANSEN doing the function that moves the money up from the holder
 
 //move robot given distance
 void driveRobot(int dist, int speed)
 {
 	motor[motorA]=speed;
-	while(SensorValue[S3]>dist)
-	{}
+	while(SensorValue[S2]<=dist){}
+
+		if(SensorValue[S4]==1)
+		{
+			stopEverything();
+		}
+
 	motor[motorA]=0;
 
 }
 
-//reset robot to origin (will need to be used in simutaneously with driveRobot)
+//reset robot to origin using touch sensor
 void resetRobot(int speed)
 {
 	motor[motorA]=-speed;
-	while(sensorValue[S2]!=1)
+	while(SensorValue[S1]!=1)
 	{}
 	motor[motorA]=0;
 }
@@ -27,51 +41,57 @@ void resetRobot(int speed)
 
 //release bill
 
-//count bill quantity
-int getNumBills()
 
-//Read Bill Value
-void readBillValue(billColor)
+//return value of bill
+float getBillValue()
+
 {
+}
 
+//get bill value from color sensor
+int getBillColor()
+{
+int colorNum=0;
+colorNum=SensorValue[S3];
+return colorNum;
 }
 
 //convert color integer to dist in cm
-double getDist()
+float getDist(int billColor)
 {
 
 }
 
-//hard stop and reset
-void stopEverything()
-{
-	motor[motorA]=-100;
-	while(nMotorEncoder[motorA]>0)
-	{}
-	motor[motorA]=0;
-}
+
 
 task main()
 {
+float totalValue=0;
+int billColor, billCount = 0;
 bool billsLeft=true;
 
-while(billsLeft&&SensorValue[/*touchsensor*/]!=1)
+while(billsLeft&&SensorValue[S4]!=1)
 {
-readBillValue(billColor);
+billColor=getBillColor();
 
 //PICKUP BILL
 
 nMotorEncoder[motorA]=0;
-driveRobot(getDistance(billColor), 50)
+
+driveRobot(getDist(billColor), 50);
 
 //RELEASE BILL
 
-resetRobot(-50);
+resetRobot(50);
 
-//IF NO BILLS LEFT, GET OUT OF THE WHILE LOOP
-
+if(SensorValue[S4]==1)//might not always check
+{
+	billsLeft=false;
 }
-stopEverything();
+totalValue+=
+billCount++;
+}
+
 
 
 }
