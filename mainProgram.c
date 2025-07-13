@@ -17,12 +17,13 @@ void stopEverything()
 void driveRobot(int dist, int speed)
 {
 	motor[motorA]=speed;
-	while(SensorValue[S2]<=dist){}
-
+	while(SensorValue[S2]<=dist)
+	{
 		if(SensorValue[S4]==1)
 		{
 			stopEverything();
 		}
+  }
 
 	motor[motorA]=0;
 
@@ -43,9 +44,27 @@ void resetRobot(int speed)
 
 
 //return value of bill
-float getBillValue()
-
+int getBillValue(int billColor)
 {
+	int billValue=0;
+
+	if(billColor==2)
+	billValue=5;
+
+	if(billColor==3)
+	billValue=20;
+
+	if(billColor==4)//sensor can't read purple, tentatively using yellow
+	billValue=10;
+
+	if(billColor==5)
+	billValue=50;
+
+	if(billColor==7)
+	billValue=100;
+
+return billValue;
+
 }
 
 //get bill value from color sensor
@@ -59,18 +78,34 @@ return colorNum;
 //convert color integer to dist in cm
 float getDist(int billColor)
 {
+float distCM=0;
+	if(billColor==2)
+	distCM=20;
 
+	if(billColor==3)
+	distCM=10;
+
+	if(billColor==4)//sensor can't read purple, tentatively using yellow
+	distCM=30;
+
+	if(billColor==5)
+	distCM=40;
+
+	if(billColor==7)
+	distCM=50;
+
+return distCM;
 }
 
 
 
 task main()
 {
-float totalValue=0;
+int totalValue=0;
 int billColor, billCount = 0;
 bool billsLeft=true;
 
-while(billsLeft&&SensorValue[S4]!=1)
+while(billsLeft)
 {
 billColor=getBillColor();
 
@@ -84,14 +119,12 @@ driveRobot(getDist(billColor), 50);
 
 resetRobot(50);
 
-if(SensorValue[S4]==1)//might not always check
-{
-	billsLeft=false;
-}
-totalValue+=
+//CHECK FOR BILLS LEFT
+
+totalValue+=getBillValue(billColor);
 billCount++;
 }
-
+displayString(0,"total value");
 
 
 }
