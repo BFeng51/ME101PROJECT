@@ -2,6 +2,22 @@
 //S4 WILL BE SHUTDOWN BUTTON (TOUCH SENSOR)
 //GLOBAL VARIABLES HERE:
 
+//configure all sensors
+void configureAllSensors()
+{
+SensorType[S1] = sensorEV3_Touch;
+SensorType[S2] = sensorEV3_Ultrasonic;
+SensorType[S3] = sensorEV3_Color;
+wait1Msec(50);
+SensorMode[S3] = modeEV3Color_Color;
+wait1Msec(50);
+SensorType[S4] = sensorEV3_Gyro;
+wait1Msec(50);
+SensorMode[S4] = modeEV3Gyro_Calibration;
+wait1Msec(50);
+SensorMode[S4] = modeEV3Gyro_RateAndAngle;
+wait1Msec(50);
+}
 
 //hard stop and reset
 void stopEverything()
@@ -100,6 +116,7 @@ return distCM;
 
 
 task main()
+configureAllSensors();
 {
 int totalValue=0;
 int billColor, billCount = 0;
