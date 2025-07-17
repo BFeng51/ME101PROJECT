@@ -1,41 +1,66 @@
-//SENSOR INPUTS ARE WRITTEN ASSUMING STANDARD CONFIGURATION (SUBJECT TO CHANGE)
-//S4 WILL BE SHUTDOWN BUTTON (TOUCH SENSOR)
+/*
+MOTOR A - DRIVES THE ROBOT
+MOTOR B - MOVES SORTING ARM
+MOTOR C - MOVES CASH BOX
+*/
+
 //GLOBAL VARIABLES HERE:
+bool billsLeft=true;
 
 //configure all sensors
 void configureAllSensors()
 {
 SensorType[S1] = sensorEV3_Touch;
-SensorType[S2] = sensorEV3_Ultrasonic;
+SensorType[S2] = sensorEV3_Ultrasonic;//distance to drive
 SensorType[S3] = sensorEV3_Color;
 wait1Msec(50);
 SensorMode[S3] = modeEV3Color_Color;
 wait1Msec(50);
-SensorType[S4] = sensorEV3_Gyro;
+SensorType[S4] = sensorEV3_Ultrasonic;//cash distance from top of pile
 wait1Msec(50);
-SensorMode[S4] = modeEV3Gyro_Calibration;
-wait1Msec(50);
-SensorMode[S4] = modeEV3Gyro_RateAndAngle;
-wait1Msec(50);
+
 }
 
 //hard stop and reset
 void stopEverything()
 {
+	if(SensorValue[S2]<200)//placeholder value
+	{
 	motor[motorA]=-100;
-	while(SensorValue[S1]!=1)
+	while(SensorValue[S2]<200)//placeholder value
 	{}
 	motor[motorA]=0;
-}
-//HANSEN doing the function that moves the money up from the holder
 
-//move robot given distance
+	}
+
+	if(nMotorEncoder[motorB]>0)
+	{
+		motor[motorB]=-100;
+		while(nMotorEncoder[motorB]>0)
+		{}
+		motor[motorB] = 0;
+
+	}
+
+	if(nMotorEncoder[motorC]>0)//placeholder value
+	{
+		motor[motorC]=-100;
+		while(nMotorEncoder[motorC]>0)
+		{}
+		motor[motorC]=0;
+	}
+billsLeft=false;
+
+}
+
+//drive robot given distance
 void driveRobot(int dist, int speed)
 {
+	nMotorEncoder[motorA]=0;
 	motor[motorA]=speed;
 	while(SensorValue[S2]<=dist)
 	{
-		if(SensorValue[S4]==1)
+		if(SensorValue[S1]==1)
 		{
 			stopEverything();
 		}
@@ -49,20 +74,29 @@ void driveRobot(int dist, int speed)
 void resetRobot(int speed)
 {
 	motor[motorA]=-speed;
-	while(SensorValue[S1]!=1)
+	while(SensorValue[S2]>200)
 	{}
 	motor[motorA]=0;
 }
 
-//pickup bill
+//pickup/release bill
+void manipulateBill(int direction, float armDist)
+{
+	nMotorEncoder[motorB]=0;
+	motor[motorB] = direction*100; //max speed for max force
+	while(nMotorEncoder[motorB]<armDist*20)//20 is a placeholder value
+	{}
+	motor[motorB]=0;
+}
 
-//release bill
 
 
 //return value of bill
 int getBillValue(int billColor)
 {
-	int billValue=0;
+	int storedValues[6]={5,20,10,50,0,100};
+
+	/*int billValue=0;
 
 	if(billColor==2)
 	billValue=5;
@@ -77,9 +111,20 @@ int getBillValue(int billColor)
 	billValue=50;
 
 	if(billColor==7)
-	billValue=100;
+	billValue=100;*/
 
-return billValue;
+	for(int i=2; i<=7; i++)
+	{
+
+		if(i!=6)
+		{
+			if(billColor==i)
+			{
+				return storedValues[i-2];
+			}
+		}
+	}
+	return 0;
 
 }
 
@@ -92,9 +137,11 @@ return colorNum;
 }
 
 //convert color integer to dist in cm
+//MIGHT END UP CONVERTING THIS TO FOR LOOP BASED ON DESIGN REVIEW FEEDBACK
 float getDist(int billColor)
 {
 float distCM=0;
+
 	if(billColor==2)
 	distCM=20;
 
@@ -113,35 +160,56 @@ float distCM=0;
 return distCM;
 }
 
+//check if cash box is positioned high enough and adjust if necessary
+void confirmCashBoxPosition()
+{
+   if(SensorValue[S4]>35)
+   {
+     motor[motorC]=5;
+     while(SensorValue[S4]>35)
+     {}
+   	 motor[motorC]=0;
+   }
+
+}
 
 
 task main()
-configureAllSensors();
 {
+configureAllSensors();
+
 int totalValue=0;
 int billColor, billCount = 0;
-bool billsLeft=true;
+
 
 while(billsLeft)
 {
 billColor=getBillColor();
 
-//PICKUP BILL
+confirmCashBoxPosition();
 
-nMotorEncoder[motorA]=0;
+manipulateBill(-1,1);
+
+manipulateBill(1,0.5);
+
 
 driveRobot(getDist(billColor), 50);
 
-//RELEASE BILL
+manipulateBill(1);
 
 resetRobot(50);
 
-//CHECK FOR BILLS LEFT
+
+if(SensorValue[S3]==0||SensorValue[S3]==1)
+{
+	billsLeft=false;
+}
 
 totalValue+=getBillValue(billColor);
 billCount++;
 }
-displayString(0,"total value");
+displayString(0,"total number of bills is  %d",billCount);
+displayString(1,"total value is $ %d",totalValue);
 
 
 }
