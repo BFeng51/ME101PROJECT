@@ -163,10 +163,16 @@ return distCM;
 //check if cash box is positioned high enough and adjust if necessary
 void confirmCashBoxPosition()
 {
-   if(SensorValue[S4]>35)
+   if(SensorValue[S4]>3.5)
    {
      motor[motorC]=5;
-     while(SensorValue[S4]>35)
+     while(SensorValue[S4]>3.5)
+     {}
+   	 motor[motorC]=0;
+   } else if(SensorValue[S4]<3.4)
+   {
+      motor[motorC]=-5;
+     while(SensorValue[S4]<3.4)
      {}
    	 motor[motorC]=0;
    }
@@ -195,7 +201,7 @@ manipulateBill(1,0.5);
 
 driveRobot(getDist(billColor), 50);
 
-manipulateBill(1);
+manipulateBill(1,1);
 
 resetRobot(50);
 
@@ -210,6 +216,7 @@ billCount++;
 }
 displayString(0,"total number of bills is  %d",billCount);
 displayString(1,"total value is $ %d",totalValue);
+//add in hard stop message and or error
 
 
 }
