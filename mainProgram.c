@@ -6,6 +6,7 @@ MOTOR C - MOVES CASH BOX
 
 //GLOBAL VARIABLES HERE:
 bool billsLeft=true;
+bool resetHit = false;
 
 //configure all sensors
 void configureAllSensors()
@@ -21,35 +22,41 @@ wait1Msec(50);
 
 }
 
+
+
 //hard stop and reset
 void stopEverything()
 {
-	if(SensorValue[S2]<200)//placeholder value
+
+	if(nMotorEncoder[motorC]>0)
 	{
-	motor[motorA]=-100;
-	while(SensorValue[S2]<200)//placeholder value
+	motor[motorC]=-50;
+	wait1Msec(900);
+	motor[motorC]=0;
+	}
+
+	if(SensorValue[S2]<=55)
+
+	{
+	motor[motorA]=100;
+	while(SensorValue[S2]<=55)
 	{}
 	motor[motorA]=0;
 
 	}
 
-	if(nMotorEncoder[motorB]>0)
-	{
+
 		motor[motorB]=-100;
-		while(nMotorEncoder[motorB]>0)
-		{}
+		wait1Msec(100);
 		motor[motorB] = 0;
 
-	}
 
-	if(nMotorEncoder[motorC]>0)//placeholder value
-	{
-		motor[motorC]=-100;
-		while(nMotorEncoder[motorC]>0)
-		{}
-		motor[motorC]=0;
-	}
+
+
 billsLeft=false;
+resetHit = true;
+
+
 
 }
 
@@ -57,13 +64,16 @@ billsLeft=false;
 void driveRobot(int dist, int speed)
 {
 	nMotorEncoder[motorA]=0;
+	clearTimer(T1);
+	int timeout = 1750
+
 	motor[motorA]=speed;
-	while(SensorValue[S2]<=dist)
+	while(SensorValue[S2]>dist&&time1(T1)<timeout)
 	{
-		if(SensorValue[S1]==1)
-		{
+	if(SensorValue[S1]==1)
+			{
 			stopEverything();
-		}
+			}
   }
 
 	motor[motorA]=0;
@@ -73,45 +83,55 @@ void driveRobot(int dist, int speed)
 //reset robot to origin using touch sensor
 void resetRobot(int speed)
 {
-	motor[motorA]=-speed;
-	while(SensorValue[S2]>200)
-	{}
+	motor[motorA]=speed;
+	while(SensorValue[S2]<55)
+	{
+			if(SensorValue[S1]==1)
+			{
+			stopEverything();
+			}
+		}
+
 	motor[motorA]=0;
 }
 
-//pickup/release bill
-void manipulateBill(int direction, float armDist)
+//pickup/release bill, positive direction brings the arm down
+void armDown(int direction, float armDist)
 {
-	nMotorEncoder[motorB]=0;
-	motor[motorB] = direction*100; //max speed for max force
-	while(nMotorEncoder[motorB]<armDist*20)//20 is a placeholder value
-	{}
-	motor[motorB]=0;
+	nMotorEncoder[motorB] = 0;
+	motor[motorB] = direction * 100;
+
+	clearTimer(T1); // start a timer
+	int timeout = 3000; // 3 seconds
+
+	// Move until encoder reaches target based on direction
+	if (direction > 0)
+	{
+		while(nMotorEncoder[motorB] < armDist * 175 && time1[T1] < timeout)
+		{
+			wait1Msec(10);
+		}
+	}
+	else if (direction < 0)
+	{
+		while(nMotorEncoder[motorB] > -armDist * 175 && time1[T1] < timeout)
+		{
+			wait1Msec(10);
+		}
+	}
+
+	motor[motorB] = 0;
 }
+
+
 
 
 
 //return value of bill
-int getBillValue(int billColor)
+int getBillValue(int billColor)//DONE BUT DOESNT READ OUR BLUE PROPERLY
 {
 	int storedValues[6]={5,20,10,50,0,100};
 
-	/*int billValue=0;
-
-	if(billColor==2)
-	billValue=5;
-
-	if(billColor==3)
-	billValue=20;
-
-	if(billColor==4)//sensor can't read purple, tentatively using yellow
-	billValue=10;
-
-	if(billColor==5)
-	billValue=50;
-
-	if(billColor==7)
-	billValue=100;*/
 
 	for(int i=2; i<=7; i++)
 	{
@@ -129,7 +149,7 @@ int getBillValue(int billColor)
 }
 
 //get bill value from color sensor
-int getBillColor()
+int getBillColor()//DONE
 {
 int colorNum=0;
 colorNum=SensorValue[S3];
@@ -137,25 +157,24 @@ return colorNum;
 }
 
 //convert color integer to dist in cm
-//MIGHT END UP CONVERTING THIS TO FOR LOOP BASED ON DESIGN REVIEW FEEDBACK
 float getDist(int billColor)
 {
 float distCM=0;
 
-	if(billColor==2)
-	distCM=20;
+	if(billColor == (int) colorBlue)
+	distCM=42;
 
-	if(billColor==3)
-	distCM=10;
+	if(billColor== (int) colorYellow)//yellow in place of purple
+	distCM=32;
 
-	if(billColor==4)//sensor can't read purple, tentatively using yellow
-	distCM=30;
+	if(billColor== (int) colorGreen)
+	distCM=22;
 
-	if(billColor==5)
-	distCM=40;
+	if(billColor== (int) colorRed)
+	distCM=12;
 
-	if(billColor==7)
-	distCM=50;
+	if(billColor== (int) colorBrown)
+	distCM=2.5;
 
 return distCM;
 }
@@ -163,16 +182,16 @@ return distCM;
 //check if cash box is positioned high enough and adjust if necessary
 void confirmCashBoxPosition()
 {
-   if(SensorValue[S4]>3.5)
+   if(SensorValue[S4]>15.5)
    {
-     motor[motorC]=5;
-     while(SensorValue[S4]>3.5)
+     motor[motorC]=10;
+     while(SensorValue[S4]>15.5)
      {}
    	 motor[motorC]=0;
-   } else if(SensorValue[S4]<3.4)
+   } if(SensorValue[S4]<15.5)
    {
-      motor[motorC]=-5;
-     while(SensorValue[S4]<3.4)
+      motor[motorC]=-10;
+     while(SensorValue[S4]<15.5)
      {}
    	 motor[motorC]=0;
    }
@@ -186,23 +205,28 @@ configureAllSensors();
 
 int totalValue=0;
 int billColor, billCount = 0;
+int testVal =0;
 
 
 while(billsLeft)
 {
 billColor=getBillColor();
 
+wait1Msec(500);
 confirmCashBoxPosition();
-
-manipulateBill(-1,1);
-
-manipulateBill(1,0.5);
+wait1Msec(1000);
 
 
-driveRobot(getDist(billColor), 50);
+armDown(1,1);
+wait1Msec(500);
+armDown(-1,0.5);
 
-manipulateBill(1,1);
 
+driveRobot(getDist(billColor), -100);
+
+armDown(-1,0.75);
+
+wait1Msec(500);
 resetRobot(50);
 
 
@@ -214,9 +238,19 @@ if(SensorValue[S3]==0||SensorValue[S3]==1)
 totalValue+=getBillValue(billColor);
 billCount++;
 }
+
+if(!resetHit)
+{
+motor[motorC]=-540;
+wait1Msec(900);
+motor[motorC]=0;
+}
+
 displayString(0,"total number of bills is  %d",billCount);
-displayString(1,"total value is $ %d",totalValue);
-//add in hard stop message and or error
+displayString(1,"total value is $%d",totalValue);
+displayString(2,"distance is %d",testVal);
+wait1Msec(10000);
+
 
 
 }
